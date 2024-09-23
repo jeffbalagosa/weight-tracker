@@ -81,7 +81,7 @@ def get_last_10_entries():
         differences.append(difference)
 
     average_weight = sum([entry[1] for entry in entries]) / len(entries)
-    print(f"\nAverage: {average_weight:.2f} lbs")
+    print(f"\nMoving Average: {average_weight:.2f} lbs")
 
     return entries
 
