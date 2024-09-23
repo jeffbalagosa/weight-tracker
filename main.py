@@ -12,7 +12,7 @@ DATABASE_FILE = "weight_tracker.db"
 def setup_gui():
     root = tk.Tk()
     root.title("Weight Tracker")
-    root.geometry("500x450")
+    root.geometry("500x400")  # Adjusted window size if needed
 
     # Frame for input fields
     input_frame = tk.Frame(root)
@@ -30,13 +30,13 @@ def setup_gui():
         text="Log Today's Weight",
         command=lambda: log_today(weight_entry, table_frame, moving_avg_label),
     )
-    log_button.grid(row=1, column=0, columnspan=2, pady=10)
+    log_button.grid(row=1, column=0, columnspan=2, pady=5)  # Reduced bottom padding
 
     # Button to log weight for a specific date
     specific_date_label = tk.Label(input_frame, text="Enter Date (YYYY-MM-DD):")
-    specific_date_label.grid(row=2, column=0, padx=10, pady=10)
+    specific_date_label.grid(row=2, column=0, padx=10, pady=5)
     date_entry = tk.Entry(input_frame)
-    date_entry.grid(row=2, column=1, padx=10, pady=10)
+    date_entry.grid(row=2, column=1, padx=10, pady=5)
 
     # Button to log weight for the specific date
     specific_log_button = tk.Button(
@@ -46,21 +46,22 @@ def setup_gui():
             date_entry, weight_entry, table_frame, moving_avg_label
         ),
     )
-    specific_log_button.grid(row=3, column=0, columnspan=2, pady=10)
+    specific_log_button.grid(row=3, column=0, columnspan=2, pady=5)
 
     # Display Area for the last 10 weigh-ins and moving average
     display_frame = tk.Frame(root)
-    display_frame.pack(pady=10)
+    display_frame.pack(pady=5)  # Reduced bottom padding to avoid excess space
+
     display_label = tk.Label(display_frame, text="Last 10 Weigh-Ins:")
     display_label.pack()
 
     # Frame to hold the table
     table_frame = tk.Frame(display_frame)
-    table_frame.pack()
+    table_frame.pack(pady=(5, 0))  # Reduced bottom padding, top is fine for separation
 
     # Label for moving average
     moving_avg_label = tk.Label(display_frame, text="Moving Average: ")
-    moving_avg_label.pack(pady=(10, 0))  # Reduced vertical padding
+    moving_avg_label.pack(pady=(5, 0))  # Removed excessive padding at the bottom
 
     # Initial call to display the last 10 entries and moving average
     update_display(table_frame, moving_avg_label)
