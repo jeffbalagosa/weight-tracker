@@ -32,37 +32,51 @@ def setup_database():
         conn.close()
 
 
-def get_last_10_entries():
+def fetch_last_entries(limit=10):
     """
-    Retrieves and displays the last 10 weight entries from the database.
-    Connects to the SQLite database specified by DATABASE_FILE, fetches the last
-    10 weigh-in entries ordered by date in descending order, and then displays
-    them in ascending order. Each entry includes the date, weight, and the
-    difference in weight from the previous entry. If no entries are found, a
-    message is printed indicating that no weigh-ins have been recorded yet.
+    Fetch the last entries from the weigh_ins table in the database.
+
+    This function connects to the database specified by DATABASE_FILE, retrieves
+    the most recent entries from the weigh_ins table, and returns them in ascending
+    order by date.
+
+    Args:
+        limit (int, optional): The maximum number of entries to fetch. Defaults to 10.
+
     Returns:
-        list: A list of tuples, each containing the date and weight of the last
-              10 weigh-ins in ascending order. If no entries are found, an empty
-              list is returned.
+        list of tuple: A list of tuples, where each tuple contains the date and weight
+        of a weigh-in entry. The list is ordered by date in ascending order.
+
+    Raises:
+        sqlite3.Error: If there is an error connecting to or querying the database.
     """
-    conn = sqlite3.connect(DATABASE_FILE)
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT date, weight FROM weigh_ins ORDER BY date DESC LIMIT 10")
-    entries = cursor.fetchall()
-
-    conn.close()
-
-    if not entries:
-        print("No weigh-ins have been recorded yet. Please add your first entry!")
+    try:
+        with sqlite3.connect(DATABASE_FILE) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT date, weight FROM weigh_ins ORDER BY date DESC LIMIT ?",
+                (limit,),
+            )
+            entries = cursor.fetchall()
+        return entries[::-1]  # Return in ascending order
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
         return []
 
-    entries = entries[::-1]
 
-    print("\nLast 10 Weigh-ins:")
-    print("|    Date    |  Weight  | Difference |")
-    print("|------------|----------|------------|")
+def calculate_differences(entries):
+    """
+    Calculate the differences in weight between consecutive entries.
 
+    Args:
+        entries (list of tuples): A list of tuples where each tuple contains a date (str) and a weight (float).
+
+    Returns:
+        list of tuples: A list of tuples where each tuple contains a date (str), a weight (float),
+                        and the difference in weight from the previous entry (str).
+                        The difference is formatted as a string with one decimal place followed by " lbs".
+                        If there is no previous entry, the difference is "-".
+    """
     previous_weight = None
     differences = []
     for entry in entries:
@@ -75,14 +89,51 @@ def get_last_10_entries():
                 if weight - previous_weight != 0
                 else "-"
             )
-
-        print(f"| {date} | {weight:.1f} lbs | {difference:>10} |")
+        differences.append((date, weight, difference))
         previous_weight = weight
-        differences.append(difference)
+    return differences
+
+
+def display_entries(entries):
+    """
+    Displays the last 10 weigh-in entries in a formatted table.
+    Args:
+        entries (list of tuples): A list of tuples where each tuple contains:
+            - date (str): The date of the weigh-in.
+            - weight (float): The weight recorded on that date.
+            - difference (float): The difference in weight compared to the previous entry.
+    Returns:
+        None
+    """
+    if not entries:
+        print("No weigh-ins have been recorded yet. Please add your first entry!")
+        return
+
+    print("\nLast 10 Weigh-ins:")
+    print("|------------|-----------|-------------|")
+    print("|    Date    |  Weight   | Difference  |")
+    print("|------------|-----------|-------------|")
+
+    for date, weight, difference in entries:
+        print(f"| {date} | {weight:.1f} lbs |  {difference:>10} |")
 
     average_weight = sum([entry[1] for entry in entries]) / len(entries)
     print(f"\nMoving Average: {average_weight:.2f} lbs")
 
+
+def get_last_10_entries():
+    """
+    Fetches the last 10 entries, calculates the differences between them,
+    and displays the entries with their differences.
+    Returns:
+        list: A list of the last 10 entries. If no entries are found, returns an empty list.
+    """
+    entries = fetch_last_entries()
+    if not entries:
+        return []
+
+    entries_with_differences = calculate_differences(entries)
+    display_entries(entries_with_differences)
     return entries
 
 
