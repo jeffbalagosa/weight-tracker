@@ -4,27 +4,22 @@ from datetime import datetime
 import tkinter as tk
 from tkinter import messagebox
 
-# Database file path
 DATABASE_FILE = "weight_tracker.db"
 
 
-# GUI setup
 def setup_gui():
     root = tk.Tk()
     root.title("Weight Tracker")
     root.geometry("500x450")
 
-    # Frame for input fields
     input_frame = tk.Frame(root)
     input_frame.pack(pady=10)
 
-    # Weight Entry Field
     weight_label = tk.Label(input_frame, text="Enter Weight (lbs):")
     weight_label.grid(row=0, column=0, padx=10, pady=10)
     weight_entry = tk.Entry(input_frame)
     weight_entry.grid(row=0, column=1, padx=10, pady=10)
 
-    # Button to log today's weight
     log_button = tk.Button(
         input_frame,
         text="Log Today's Weight",
@@ -32,13 +27,11 @@ def setup_gui():
     )
     log_button.grid(row=1, column=0, columnspan=2, pady=5)
 
-    # Button to log weight for a specific date
     specific_date_label = tk.Label(input_frame, text="Enter Date (YYYY-MM-DD):")
     specific_date_label.grid(row=2, column=0, padx=10, pady=5)
     date_entry = tk.Entry(input_frame)
     date_entry.grid(row=2, column=1, padx=10, pady=5)
 
-    # Button to log weight for the specific date
     specific_log_button = tk.Button(
         input_frame,
         text="Log Weight for Date",
@@ -48,18 +41,15 @@ def setup_gui():
     )
     specific_log_button.grid(row=3, column=0, columnspan=2, pady=5)
 
-    # Display Area for the last 10 weigh-ins and moving average
     display_frame = tk.Frame(root)
     display_frame.pack(pady=5)
 
     display_label = tk.Label(display_frame, text="Last 10 Weigh-Ins:")
     display_label.pack()
 
-    # Frame to hold the table
     table_frame = tk.Frame(display_frame)
     table_frame.pack(pady=(5, 0))
 
-    # Label for moving average (with bigger font, bold text)
     moving_avg_label = tk.Label(
         display_frame,
         text="Moving Average: ",
@@ -68,15 +58,12 @@ def setup_gui():
     )
     moving_avg_label.pack(pady=(10, 0))
 
-    # Initial call to display the last 10 entries and moving average
     update_display(table_frame, moving_avg_label)
 
     root.mainloop()
 
 
-# Update display with the last 10 entries and moving average
 def update_display(table_frame, moving_avg_label):
-    # Clear the table before displaying new data
     for widget in table_frame.winfo_children():
         widget.destroy()
 
@@ -85,7 +72,6 @@ def update_display(table_frame, moving_avg_label):
     if entries:
         total_weight = 0
 
-        # Create table headers
         tk.Label(
             table_frame, text="Date", borderwidth=1, relief="solid", width=15
         ).grid(row=0, column=0)
@@ -96,7 +82,6 @@ def update_display(table_frame, moving_avg_label):
             table_frame, text="Difference", borderwidth=1, relief="solid", width=15
         ).grid(row=0, column=2)
 
-        # Populate table with the last 10 entries
         for i, (date, weight, diff) in enumerate(entries, start=1):
             tk.Label(
                 table_frame, text=date, borderwidth=1, relief="solid", width=15
@@ -113,18 +98,15 @@ def update_display(table_frame, moving_avg_label):
             ).grid(row=i, column=2)
             total_weight += weight
 
-        # Calculate and display the moving average
         moving_avg = total_weight / len(entries)
         moving_avg_label.config(text=f"Moving Average: {moving_avg:.2f} lbs")
     else:
-        # If no entries are available, display a message
         tk.Label(table_frame, text="No weigh-ins recorded yet.", width=45).grid(
             row=0, column=0, columnspan=3
         )
         moving_avg_label.config(text="Moving Average: N/A")
 
 
-# Enhanced error handling for logging today's weight
 def log_today(weight_entry, table_frame, moving_avg_label):
     try:
         weight = float(weight_entry.get())
@@ -139,7 +121,6 @@ def log_today(weight_entry, table_frame, moving_avg_label):
     update_display(table_frame, moving_avg_label)
 
 
-# Enhanced error handling for logging weight on a specific date
 def log_specific_date(date_entry, weight_entry, table_frame, moving_avg_label):
     try:
         date_str = date_entry.get()
@@ -148,7 +129,6 @@ def log_specific_date(date_entry, weight_entry, table_frame, moving_avg_label):
             raise ValueError("Weight must be greater than zero.")
         date = datetime.strptime(date_str.strip(), "%Y-%m-%d").strftime("%Y-%m-%d")
 
-        # Check if the date is not in the future
         if datetime.strptime(date, "%Y-%m-%d") > datetime.now():
             raise ValueError("Date cannot be in the future.")
 
@@ -167,7 +147,6 @@ def log_specific_date(date_entry, weight_entry, table_frame, moving_avg_label):
     update_display(table_frame, moving_avg_label)
 
 
-# Database setup function remains unchanged
 def setup_database():
     if not os.path.exists(DATABASE_FILE):
         conn = sqlite3.connect(DATABASE_FILE)
@@ -184,7 +163,6 @@ def setup_database():
         conn.close()
 
 
-# Remaining backend functions (unchanged)
 def fetch_last_entries(limit=10):
     try:
         with sqlite3.connect(DATABASE_FILE) as conn:
