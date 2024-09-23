@@ -12,7 +12,7 @@ DATABASE_FILE = "weight_tracker.db"
 def setup_gui():
     root = tk.Tk()
     root.title("Weight Tracker")
-    root.geometry("500x400")  # Adjusted window size if needed
+    root.geometry("500x450")
 
     # Frame for input fields
     input_frame = tk.Frame(root)
@@ -30,7 +30,7 @@ def setup_gui():
         text="Log Today's Weight",
         command=lambda: log_today(weight_entry, table_frame, moving_avg_label),
     )
-    log_button.grid(row=1, column=0, columnspan=2, pady=5)  # Reduced bottom padding
+    log_button.grid(row=1, column=0, columnspan=2, pady=5)
 
     # Button to log weight for a specific date
     specific_date_label = tk.Label(input_frame, text="Enter Date (YYYY-MM-DD):")
@@ -50,18 +50,23 @@ def setup_gui():
 
     # Display Area for the last 10 weigh-ins and moving average
     display_frame = tk.Frame(root)
-    display_frame.pack(pady=5)  # Reduced bottom padding to avoid excess space
+    display_frame.pack(pady=5)
 
     display_label = tk.Label(display_frame, text="Last 10 Weigh-Ins:")
     display_label.pack()
 
     # Frame to hold the table
     table_frame = tk.Frame(display_frame)
-    table_frame.pack(pady=(5, 0))  # Reduced bottom padding, top is fine for separation
+    table_frame.pack(pady=(5, 0))
 
-    # Label for moving average
-    moving_avg_label = tk.Label(display_frame, text="Moving Average: ")
-    moving_avg_label.pack(pady=(5, 0))  # Removed excessive padding at the bottom
+    # Label for moving average (with bigger font, bold text)
+    moving_avg_label = tk.Label(
+        display_frame,
+        text="Moving Average: ",
+        font=("Helvetica", 14, "bold"),
+        fg="blue",
+    )
+    moving_avg_label.pack(pady=(10, 0))
 
     # Initial call to display the last 10 entries and moving average
     update_display(table_frame, moving_avg_label)
@@ -119,32 +124,45 @@ def update_display(table_frame, moving_avg_label):
         moving_avg_label.config(text="Moving Average: N/A")
 
 
-# Log today's weight from input
+# Enhanced error handling for logging today's weight
 def log_today(weight_entry, table_frame, moving_avg_label):
     try:
         weight = float(weight_entry.get())
+        if weight <= 0:
+            raise ValueError("Weight must be greater than zero.")
         insert_or_update_weigh_in(weight)
         messagebox.showinfo("Success", "Today's weight logged successfully!")
         weight_entry.delete(0, tk.END)
-    except ValueError:
-        messagebox.showerror("Invalid Input", "Please enter a valid numeric weight.")
+    except ValueError as e:
+        messagebox.showerror("Invalid Input", f"Error: {e}")
+        weight_entry.delete(0, tk.END)
     update_display(table_frame, moving_avg_label)
 
 
-# Log weight for a specific date
+# Enhanced error handling for logging weight on a specific date
 def log_specific_date(date_entry, weight_entry, table_frame, moving_avg_label):
     try:
         date_str = date_entry.get()
         weight = float(weight_entry.get())
+        if weight <= 0:
+            raise ValueError("Weight must be greater than zero.")
         date = datetime.strptime(date_str.strip(), "%Y-%m-%d").strftime("%Y-%m-%d")
+
+        # Check if the date is not in the future
+        if datetime.strptime(date, "%Y-%m-%d") > datetime.now():
+            raise ValueError("Date cannot be in the future.")
+
         insert_or_update_weigh_in_on_date(date, weight)
         messagebox.showinfo("Success", f"Weigh-in for {date} logged successfully!")
         date_entry.delete(0, tk.END)
         weight_entry.delete(0, tk.END)
-    except ValueError:
+    except ValueError as e:
+        messagebox.showerror("Invalid Input", f"Error: {e}")
+        date_entry.delete(0, tk.END)
+        weight_entry.delete(0, tk.END)
+    except IndexError:
         messagebox.showerror(
-            "Invalid Input",
-            "Please enter a valid date in YYYY-MM-DD format and a numeric weight.",
+            "Invalid Input", "Please enter the date in YYYY-MM-DD format."
         )
     update_display(table_frame, moving_avg_label)
 
