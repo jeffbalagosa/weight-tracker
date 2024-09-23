@@ -118,7 +118,9 @@ def display_entries(entries):
         print(f"| {date} | {weight:.1f} lbs |  {difference:>10} |")
 
     average_weight = sum([entry[1] for entry in entries]) / len(entries)
-    print(f"\nMoving Average: {average_weight:.2f} lbs")
+    print("\n" + "*" * 30)
+    print(f"Moving Average: {average_weight:.2f} lbs")
+    print("*" * 30)
 
 
 def get_last_10_entries():
