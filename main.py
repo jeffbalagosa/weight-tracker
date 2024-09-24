@@ -7,6 +7,13 @@ from tkinter import messagebox
 DATABASE_FILE = "weight_tracker.db"
 
 
+def create_date_entry(parent):
+    date_entry = tk.Entry(parent)
+    today_date = datetime.now().strftime("%Y-%m-%d")
+    date_entry.insert(0, today_date)
+    return date_entry
+
+
 def setup_gui():
     root = tk.Tk()
     root.title("Weight Tracker")
@@ -20,28 +27,21 @@ def setup_gui():
     weight_entry = tk.Entry(input_frame)
     weight_entry.grid(row=0, column=1, padx=10, pady=10)
 
-    log_button = tk.Button(
-        input_frame,
-        text="Log Today's Weight",
-        command=lambda: log_today(weight_entry, table_frame, moving_avg_label),
-    )
-    log_button.grid(row=1, column=0, columnspan=2, pady=5)
-
     specific_date_label = tk.Label(input_frame, text="Enter Date (YYYY-MM-DD):")
-    specific_date_label.grid(row=2, column=0, padx=10, pady=5)
+    specific_date_label.grid(row=1, column=0, padx=10, pady=5)
 
     # Use create_date_entry to initialize date_entry with today's date
     date_entry = create_date_entry(input_frame)
-    date_entry.grid(row=2, column=1, padx=10, pady=5)
+    date_entry.grid(row=1, column=1, padx=10, pady=5)
 
-    specific_log_button = tk.Button(
+    log_button = tk.Button(
         input_frame,
-        text="Log Weight for Date",
+        text="Log Weight",
         command=lambda: log_specific_date(
             date_entry, weight_entry, table_frame, moving_avg_label
         ),
     )
-    specific_log_button.grid(row=3, column=0, columnspan=2, pady=5)
+    log_button.grid(row=2, column=0, columnspan=2, pady=5)
 
     display_frame = tk.Frame(root)
     display_frame.pack(pady=5)
@@ -125,12 +125,6 @@ def log_today(weight_entry, table_frame, moving_avg_label):
     update_display(table_frame, moving_avg_label)
 
 
-def create_date_entry(parent):
-    date_entry = tk.Entry(parent)
-    today_date = datetime.now().strftime("%Y-%m-%d")
-    date_entry.insert(0, today_date)
-    return date_entry
-
 def log_specific_date(date_entry, weight_entry, table_frame, moving_avg_label):
     try:
         date_str = date_entry.get()
@@ -144,11 +138,15 @@ def log_specific_date(date_entry, weight_entry, table_frame, moving_avg_label):
 
         insert_or_update_weigh_in_on_date(date, weight)
         messagebox.showinfo("Success", f"Weigh-in for {date} logged successfully!")
-        date_entry.delete(0, tk.END)
         weight_entry.delete(0, tk.END)
+
+        # Reset the date entry to today's date
+        today_date = datetime.now().strftime("%Y-%m-%d")
+        date_entry.delete(0, tk.END)
+        date_entry.insert(0, today_date)
+
     except ValueError as e:
         messagebox.showerror("Invalid Input", f"Error: {e}")
-        date_entry.delete(0, tk.END)
         weight_entry.delete(0, tk.END)
     except IndexError:
         messagebox.showerror(
