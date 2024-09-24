@@ -98,7 +98,23 @@ def insert_or_update_weigh_in(db_file, date, weight):
                     "INSERT INTO weigh_ins (date, weight) VALUES (?, ?)", (date, weight)
                 )
             conn.commit()
-            print(f"Weigh-in for {date} recorded/updated successfully.")
+            print(f"\nWeigh-in for {date} recorded/updated successfully.")
+    except sqlite3.Error as e:
+        print(f"\nDatabase error: {e}")
+
+
+def purge_records(db_file, years=None):
+    try:
+        with sqlite3.connect(db_file) as conn:
+            cursor = conn.cursor()
+            if years:
+                cursor.execute(
+                    "DELETE FROM weigh_ins WHERE date < date('now', ?)",
+                    (f"-{years} years",),
+                )
+            else:
+                cursor.execute("DELETE FROM weigh_ins")
+            conn.commit()
     except sqlite3.Error as e:
         print(f"Database error: {e}")
 
@@ -107,6 +123,7 @@ def main():
     setup_database(DATABASE_FILE)
 
     while True:
+        purge_records(DATABASE_FILE, years=10)
         print("\n# Main Screen")
 
         entries_arr_length = len(fetch_last_entries(DATABASE_FILE))
@@ -119,6 +136,7 @@ def main():
         print("\n## Commands:")
         print(" - /w to enter or adjust today's weigh-in.")
         print(" - /a to enter or adjust a weigh-in for a different day.")
+        print(" - /s to start over (purge all records).")
         print(" - Ctrl + c to quit the application.")
         print("")
 
@@ -146,8 +164,16 @@ def main():
                 insert_or_update_weigh_in(DATABASE_FILE, date, weight)
             except (ValueError, IndexError):
                 print(
-                    "Invalid format. Please enter the date in YYYY-MM-DD format and a numeric weight."
+                    "\nInvalid format. Please enter the date in YYYY-MM-DD format and a numeric weight."
                 )
+            continue
+
+        elif command == "/s":
+            print("\nAre you sure you want to delete all records? (y/n)")
+            confirm = input().strip().lower()
+            if confirm == "y":
+                purge_records(DATABASE_FILE)
+                print("\nAll records have been deleted.")
             continue
 
 
