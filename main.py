@@ -30,7 +30,6 @@ def setup_gui():
     specific_date_label = tk.Label(input_frame, text="Enter Date (YYYY-MM-DD):")
     specific_date_label.grid(row=1, column=0, padx=10, pady=5)
 
-    # Use create_date_entry to initialize date_entry with today's date
     date_entry = create_date_entry(input_frame)
     date_entry.grid(row=1, column=1, padx=10, pady=5)
 
@@ -140,7 +139,6 @@ def log_specific_date(date_entry, weight_entry, table_frame, moving_avg_label):
         messagebox.showinfo("Success", f"Weigh-in for {date} logged successfully!")
         weight_entry.delete(0, tk.END)
 
-        # Reset the date entry to today's date
         today_date = datetime.now().strftime("%Y-%m-%d")
         date_entry.delete(0, tk.END)
         date_entry.insert(0, today_date)

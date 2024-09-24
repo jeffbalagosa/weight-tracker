@@ -8,11 +8,15 @@ MOCK_DATABASE_FILE = "weight_tracker_mock.db"
 def create_mock_data():
     entries = []
     start_date = datetime.now() - timedelta(days=10)
+    current_date = datetime.now()
     for i in range(10):
-        random_days = random.randint(1, 5)  # Random number of days between 1 and 5
-        date = (start_date + timedelta(days=random_days * i)).strftime("%Y-%m-%d")
+        random_days = random.randint(1, 5)
+        date = start_date + timedelta(days=random_days * i)
+        if date > current_date:
+            date = current_date
+        date_str = date.strftime("%Y-%m-%d")
         weight = round(190 + (i % 2) * 3 + (i * 0.5), 1)
-        entries.append((date, weight))
+        entries.append((date_str, weight))
     return entries
 
 
