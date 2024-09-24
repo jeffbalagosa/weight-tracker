@@ -126,6 +126,7 @@ def log_today(weight_entry, table_frame, moving_avg_label):
 
 def log_specific_date(date_entry, weight_entry, table_frame, moving_avg_label):
     try:
+        purge_records(DATABASE_FILE, years=10)
         date_str = date_entry.get()
         weight = float(weight_entry.get())
         if weight <= 0:
@@ -167,6 +168,22 @@ def setup_database():
         )
         conn.commit()
         conn.close()
+
+
+def purge_records(db_file, years=None):
+    try:
+        with sqlite3.connect(db_file) as conn:
+            cursor = conn.cursor()
+            if years:
+                cursor.execute(
+                    "DELETE FROM weigh_ins WHERE date < date('now', ?)",
+                    (f"-{years} years",),
+                )
+            else:
+                cursor.execute("DELETE FROM weigh_ins")
+            conn.commit()
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
 
 
 def fetch_last_entries(limit=10):
