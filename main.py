@@ -5,6 +5,7 @@ import tkinter as tk
 from tkinter import messagebox
 
 DATABASE_FILE = "weight_tracker.db"
+DATE_FORMAT = "%Y-%m-%d"
 
 
 def create_date_entry(parent):
@@ -22,14 +23,10 @@ def setup_gui():
     input_frame = tk.Frame(root)
     input_frame.pack(pady=10)
 
-    weight_label = tk.Label(input_frame, text="Enter Weight (lbs):")
-    weight_label.grid(row=0, column=0, padx=10, pady=10)
-    weight_entry = tk.Entry(input_frame)
-    weight_entry.grid(row=0, column=1, padx=10, pady=10)
+    create_label(input_frame, "Enter Weight (lbs):", 0, 0)
+    weight_entry = create_entry(input_frame, 0, 1)
 
-    specific_date_label = tk.Label(input_frame, text="Enter Date (YYYY-MM-DD):")
-    specific_date_label.grid(row=1, column=0, padx=10, pady=5)
-
+    create_label(input_frame, "Enter Date (YYYY-MM-DD):", 1, 0)
     date_entry = create_date_entry(input_frame)
     date_entry.grid(row=1, column=1, padx=10, pady=5)
 
@@ -45,10 +42,9 @@ def setup_gui():
     display_frame = tk.Frame(root)
     display_frame.pack(pady=5)
 
-    display_label = tk.Label(
+    tk.Label(
         display_frame, text="Last 10 Weigh-Ins:", font=("Helvetica", 12, "bold")
-    )
-    display_label.pack()
+    ).pack()
 
     table_frame = tk.Frame(display_frame)
     table_frame.pack(pady=(5, 0))
@@ -66,6 +62,18 @@ def setup_gui():
     root.mainloop()
 
 
+def create_label(parent, text, row, column, **kwargs):
+    label = tk.Label(parent, text=text, **kwargs)
+    label.grid(row=row, column=column, padx=10, pady=10)
+    return label
+
+
+def create_entry(parent, row, column):
+    entry = tk.Entry(parent)
+    entry.grid(row=row, column=column, padx=10, pady=10)
+    return entry
+
+
 def update_display(table_frame, moving_avg_label):
     for widget in table_frame.winfo_children():
         widget.destroy()
@@ -75,38 +83,36 @@ def update_display(table_frame, moving_avg_label):
     if entries:
         total_weight = 0
 
+        header_frame = tk.Frame(table_frame)
+        header_frame.pack(fill=tk.X)
         tk.Label(
-            table_frame, text="Date", borderwidth=1, relief="solid", width=15
-        ).grid(row=0, column=0)
+            header_frame, text="Date", borderwidth=1, relief="solid", width=15
+        ).pack(side=tk.LEFT)
         tk.Label(
-            table_frame, text="Weight (lbs)", borderwidth=1, relief="solid", width=15
-        ).grid(row=0, column=1)
+            header_frame, text="Weight (lbs)", borderwidth=1, relief="solid", width=15
+        ).pack(side=tk.LEFT)
         tk.Label(
-            table_frame, text="Difference", borderwidth=1, relief="solid", width=15
-        ).grid(row=0, column=2)
+            header_frame, text="Difference", borderwidth=1, relief="solid", width=15
+        ).pack(side=tk.LEFT)
 
-        for i, (date, weight, diff) in enumerate(entries, start=1):
+        for date, weight, diff in entries:
+            row_frame = tk.Frame(table_frame)
+            row_frame.pack(fill=tk.X)
             tk.Label(
-                table_frame, text=date, borderwidth=1, relief="solid", width=15
-            ).grid(row=i, column=0)
+                row_frame, text=date, borderwidth=1, relief="solid", width=15
+            ).pack(side=tk.LEFT)
             tk.Label(
-                table_frame,
-                text=f"{weight:.1f}",
-                borderwidth=1,
-                relief="solid",
-                width=15,
-            ).grid(row=i, column=1)
+                row_frame, text=f"{weight:.1f}", borderwidth=1, relief="solid", width=15
+            ).pack(side=tk.LEFT)
             tk.Label(
-                table_frame, text=diff, borderwidth=1, relief="solid", width=15
-            ).grid(row=i, column=2)
+                row_frame, text=diff, borderwidth=1, relief="solid", width=15
+            ).pack(side=tk.LEFT)
             total_weight += weight
 
         moving_avg = total_weight / len(entries)
         moving_avg_label.config(text=f"Moving Average: {moving_avg:.1f} lbs")
     else:
-        tk.Label(table_frame, text="No weigh-ins recorded yet.", width=45).grid(
-            row=0, column=0, columnspan=3
-        )
+        tk.Label(table_frame, text="No weigh-ins recorded yet.", width=45).pack()
         moving_avg_label.config(text="Moving Average: N/A")
 
 
@@ -115,20 +121,12 @@ def log_specific_date(date_entry, weight_entry, table_frame, moving_avg_label):
         purge_records(DATABASE_FILE, years=10)
         date_str = date_entry.get()
         weight = float(weight_entry.get())
-        if weight <= 0:
-            raise ValueError("Weight must be greater than zero.")
-        date = datetime.strptime(date_str.strip(), "%Y-%m-%d").strftime("%Y-%m-%d")
-
-        if datetime.strptime(date, "%Y-%m-%d") > datetime.now():
-            raise ValueError("Date cannot be in the future.")
+        validate_weight(weight)
+        date = validate_date(date_str)
 
         insert_or_update_weigh_in(date, weight)
         messagebox.showinfo("Success", f"Weigh-in for {date} logged successfully!")
-        weight_entry.delete(0, tk.END)
-
-        today_date = datetime.now().strftime("%Y-%m-%d")
-        date_entry.delete(0, tk.END)
-        date_entry.insert(0, today_date)
+        reset_entries(date_entry, weight_entry)
 
     except ValueError as e:
         messagebox.showerror("Invalid Input", f"Error: {e}")
@@ -138,6 +136,25 @@ def log_specific_date(date_entry, weight_entry, table_frame, moving_avg_label):
             "Invalid Input", "Please enter the date in YYYY-MM-DD format."
         )
     update_display(table_frame, moving_avg_label)
+
+
+def validate_weight(weight):
+    if weight <= 0:
+        raise ValueError("Weight must be greater than zero.")
+
+
+def validate_date(date_str):
+    date = datetime.strptime(date_str.strip(), DATE_FORMAT).strftime(DATE_FORMAT)
+    if datetime.strptime(date, DATE_FORMAT) > datetime.now():
+        raise ValueError("Date cannot be in the future.")
+    return date
+
+
+def reset_entries(date_entry, weight_entry):
+    weight_entry.delete(0, tk.END)
+    today_date = datetime.now().strftime(DATE_FORMAT)
+    date_entry.delete(0, tk.END)
+    date_entry.insert(0, today_date)
 
 
 def setup_database():
@@ -213,15 +230,22 @@ def get_last_10_entries():
 
 
 def insert_or_update_weigh_in(date, weight):
-    with sqlite3.connect(DATABASE_FILE) as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM weigh_ins WHERE date = ?", (date,))
-        result = cursor.fetchone()
-        if result:
-            cursor.execute("UPDATE weigh_ins SET weight = ? WHERE date = ?", (weight, date))
-        else:
-            cursor.execute("INSERT INTO weigh_ins (date, weight) VALUES (?, ?)", (date, weight))
-        conn.commit()
+    try:
+        with sqlite3.connect(DATABASE_FILE) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM weigh_ins WHERE date = ?", (date,))
+            result = cursor.fetchone()
+            if result:
+                cursor.execute(
+                    "UPDATE weigh_ins SET weight = ? WHERE date = ?", (weight, date)
+                )
+            else:
+                cursor.execute(
+                    "INSERT INTO weigh_ins (date, weight) VALUES (?, ?)", (date, weight)
+                )
+            conn.commit()
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
 
 
 if __name__ == "__main__":
