@@ -110,20 +110,6 @@ def update_display(table_frame, moving_avg_label):
         moving_avg_label.config(text="Moving Average: N/A")
 
 
-def log_today(weight_entry, table_frame, moving_avg_label):
-    try:
-        weight = float(weight_entry.get())
-        if weight <= 0:
-            raise ValueError("Weight must be greater than zero.")
-        insert_or_update_weigh_in(weight)
-        messagebox.showinfo("Success", "Today's weight logged successfully!")
-        weight_entry.delete(0, tk.END)
-    except ValueError as e:
-        messagebox.showerror("Invalid Input", f"Error: {e}")
-        weight_entry.delete(0, tk.END)
-    update_display(table_frame, moving_avg_label)
-
-
 def log_specific_date(date_entry, weight_entry, table_frame, moving_avg_label):
     try:
         purge_records(DATABASE_FILE, years=10)
@@ -136,7 +122,7 @@ def log_specific_date(date_entry, weight_entry, table_frame, moving_avg_label):
         if datetime.strptime(date, "%Y-%m-%d") > datetime.now():
             raise ValueError("Date cannot be in the future.")
 
-        insert_or_update_weigh_in_on_date(date, weight)
+        insert_or_update_weigh_in(date, weight)
         messagebox.showinfo("Success", f"Weigh-in for {date} logged successfully!")
         weight_entry.delete(0, tk.END)
 
@@ -226,41 +212,16 @@ def get_last_10_entries():
     return calculate_differences(entries)
 
 
-def insert_or_update_weigh_in(weight):
-    conn = sqlite3.connect(DATABASE_FILE)
-    cursor = conn.cursor()
-    today = datetime.now().strftime("%Y-%m-%d")
-    cursor.execute("SELECT * FROM weigh_ins WHERE date = ?", (today,))
-    result = cursor.fetchone()
-
-    if result:
-        cursor.execute(
-            "UPDATE weigh_ins SET weight = ? WHERE date = ?", (weight, today)
-        )
-    else:
-        cursor.execute(
-            "INSERT INTO weigh_ins (date, weight) VALUES (?, ?)", (today, weight)
-        )
-
-    conn.commit()
-    conn.close()
-
-
-def insert_or_update_weigh_in_on_date(date, weight):
-    conn = sqlite3.connect(DATABASE_FILE)
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM weigh_ins WHERE date = ?", (date,))
-    result = cursor.fetchone()
-
-    if result:
-        cursor.execute("UPDATE weigh_ins SET weight = ? WHERE date = ?", (weight, date))
-    else:
-        cursor.execute(
-            "INSERT INTO weigh_ins (date, weight) VALUES (?, ?)", (date, weight)
-        )
-
-    conn.commit()
-    conn.close()
+def insert_or_update_weigh_in(date, weight):
+    with sqlite3.connect(DATABASE_FILE) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM weigh_ins WHERE date = ?", (date,))
+        result = cursor.fetchone()
+        if result:
+            cursor.execute("UPDATE weigh_ins SET weight = ? WHERE date = ?", (weight, date))
+        else:
+            cursor.execute("INSERT INTO weigh_ins (date, weight) VALUES (?, ?)", (date, weight))
+        conn.commit()
 
 
 if __name__ == "__main__":
