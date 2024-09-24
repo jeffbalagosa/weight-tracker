@@ -29,7 +29,9 @@ def setup_gui():
 
     specific_date_label = tk.Label(input_frame, text="Enter Date (YYYY-MM-DD):")
     specific_date_label.grid(row=2, column=0, padx=10, pady=5)
-    date_entry = tk.Entry(input_frame)
+
+    # Use create_date_entry to initialize date_entry with today's date
+    date_entry = create_date_entry(input_frame)
     date_entry.grid(row=2, column=1, padx=10, pady=5)
 
     specific_log_button = tk.Button(
@@ -122,6 +124,12 @@ def log_today(weight_entry, table_frame, moving_avg_label):
         weight_entry.delete(0, tk.END)
     update_display(table_frame, moving_avg_label)
 
+
+def create_date_entry(parent):
+    date_entry = tk.Entry(parent)
+    today_date = datetime.now().strftime("%Y-%m-%d")
+    date_entry.insert(0, today_date)
+    return date_entry
 
 def log_specific_date(date_entry, weight_entry, table_frame, moving_avg_label):
     try:
