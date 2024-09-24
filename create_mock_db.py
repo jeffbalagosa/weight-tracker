@@ -9,12 +9,16 @@ def create_mock_data():
     entries = []
     start_date = datetime.now() - timedelta(days=10)
     current_date = datetime.now()
+    used_dates = set()
     for i in range(10):
         random_days = random.randint(1, 5)
         date = start_date + timedelta(days=random_days * i)
         if date > current_date:
             date = current_date
         date_str = date.strftime("%Y-%m-%d")
+        if date_str in used_dates:
+            continue
+        used_dates.add(date_str)
         weight = round(190 + (i % 2) * 3 + (i * 0.5), 1)
         entries.append((date_str, weight))
     return entries

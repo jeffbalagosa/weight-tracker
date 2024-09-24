@@ -102,7 +102,7 @@ def update_display(table_frame, moving_avg_label):
             total_weight += weight
 
         moving_avg = total_weight / len(entries)
-        moving_avg_label.config(text=f"Moving Average: {moving_avg:.2f} lbs")
+        moving_avg_label.config(text=f"Moving Average: {moving_avg:.1f} lbs")
     else:
         tk.Label(table_frame, text="No weigh-ins recorded yet.", width=45).grid(
             row=0, column=0, columnspan=3
