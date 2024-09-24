@@ -74,43 +74,59 @@ def create_entry(parent, row, column):
     return entry
 
 
-def update_display(table_frame, moving_avg_label):
+def clear_table_frame(table_frame):
     for widget in table_frame.winfo_children():
         widget.destroy()
 
+
+def create_header(table_frame):
+    header_frame = tk.Frame(table_frame)
+    header_frame.pack(fill=tk.X)
+    tk.Label(header_frame, text="Date", borderwidth=1, relief="solid", width=15).pack(
+        side=tk.LEFT
+    )
+    tk.Label(
+        header_frame, text="Weight (lbs)", borderwidth=1, relief="solid", width=15
+    ).pack(side=tk.LEFT)
+    tk.Label(
+        header_frame, text="Difference", borderwidth=1, relief="solid", width=15
+    ).pack(side=tk.LEFT)
+
+
+def add_entry_rows(table_frame, entries):
+    total_weight = 0
+    for date, weight, diff in entries:
+        row_frame = tk.Frame(table_frame)
+        row_frame.pack(fill=tk.X)
+        tk.Label(row_frame, text=date, borderwidth=1, relief="solid", width=15).pack(
+            side=tk.LEFT
+        )
+        tk.Label(
+            row_frame, text=f"{weight:.1f}", borderwidth=1, relief="solid", width=15
+        ).pack(side=tk.LEFT)
+        tk.Label(row_frame, text=diff, borderwidth=1, relief="solid", width=15).pack(
+            side=tk.LEFT
+        )
+        total_weight += weight
+    return total_weight
+
+
+def update_moving_avg_label(moving_avg_label, total_weight, num_entries):
+    if num_entries > 0:
+        moving_avg = total_weight / num_entries
+        moving_avg_label.config(text=f"Moving Average: {moving_avg:.1f} lbs")
+    else:
+        moving_avg_label.config(text="Moving Average: N/A")
+
+
+def update_display(table_frame, moving_avg_label):
+    clear_table_frame(table_frame)
     entries = get_last_10_entries()
 
     if entries:
-        total_weight = 0
-
-        header_frame = tk.Frame(table_frame)
-        header_frame.pack(fill=tk.X)
-        tk.Label(
-            header_frame, text="Date", borderwidth=1, relief="solid", width=15
-        ).pack(side=tk.LEFT)
-        tk.Label(
-            header_frame, text="Weight (lbs)", borderwidth=1, relief="solid", width=15
-        ).pack(side=tk.LEFT)
-        tk.Label(
-            header_frame, text="Difference", borderwidth=1, relief="solid", width=15
-        ).pack(side=tk.LEFT)
-
-        for date, weight, diff in entries:
-            row_frame = tk.Frame(table_frame)
-            row_frame.pack(fill=tk.X)
-            tk.Label(
-                row_frame, text=date, borderwidth=1, relief="solid", width=15
-            ).pack(side=tk.LEFT)
-            tk.Label(
-                row_frame, text=f"{weight:.1f}", borderwidth=1, relief="solid", width=15
-            ).pack(side=tk.LEFT)
-            tk.Label(
-                row_frame, text=diff, borderwidth=1, relief="solid", width=15
-            ).pack(side=tk.LEFT)
-            total_weight += weight
-
-        moving_avg = total_weight / len(entries)
-        moving_avg_label.config(text=f"Moving Average: {moving_avg:.1f} lbs")
+        create_header(table_frame)
+        total_weight = add_entry_rows(table_frame, entries)
+        update_moving_avg_label(moving_avg_label, total_weight, len(entries))
     else:
         tk.Label(table_frame, text="No weigh-ins recorded yet.", width=45).pack()
         moving_avg_label.config(text="Moving Average: N/A")
