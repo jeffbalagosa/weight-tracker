@@ -44,7 +44,9 @@ def setup_gui():
     display_frame = tk.Frame(root)
     display_frame.pack(pady=5)
 
-    display_label = tk.Label(display_frame, text="Last 10 Weigh-Ins:")
+    display_label = tk.Label(
+        display_frame, text="Last 10 Weigh-Ins:", font=("Helvetica", 12, "bold")
+    )
     display_label.pack()
 
     table_frame = tk.Frame(display_frame)
