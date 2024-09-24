@@ -1,3 +1,4 @@
+import random
 import sqlite3
 from datetime import datetime, timedelta
 
@@ -5,13 +6,11 @@ MOCK_DATABASE_FILE = "weight_tracker_mock.db"
 
 
 def create_mock_data():
-
     entries = []
     start_date = datetime.now() - timedelta(days=10)
     for i in range(10):
-
-        date = (start_date + timedelta(days=i)).strftime("%Y-%m-%d")
-
+        random_days = random.randint(1, 5)  # Random number of days between 1 and 5
+        date = (start_date + timedelta(days=random_days * i)).strftime("%Y-%m-%d")
         weight = round(190 + (i % 2) * 3 + (i * 0.5), 1)
         entries.append((date, weight))
     return entries
