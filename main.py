@@ -108,7 +108,13 @@ def main():
 
     while True:
         print("\n# Main Screen")
-        get_last_10_entries(DATABASE_FILE)
+
+        entries_arr_length = len(fetch_last_entries(DATABASE_FILE))
+        if not entries_arr_length:
+            print("\nNo weigh-ins have been recorded yet. Please add your first entry!")
+
+        else:
+            get_last_10_entries(DATABASE_FILE)
 
         print("\n## Commands:")
         print(" - /w to enter or adjust today's weigh-in.")
