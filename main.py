@@ -116,17 +116,29 @@ def update_display(table_frame, moving_avg_label):
         moving_avg_label.config(text="Moving Average: N/A")
 
 
+def log_weight(date_str, weight):
+    """Handles the business logic of logging the weight."""
+    validate_weight(weight)
+    date = validate_date(date_str)
+    purge_records(DATABASE_FILE, years=10)
+    insert_or_update_weigh_in(date, weight)
+
+    return date
+
+
 def log_specific_date(date_entry, weight_entry, table_frame, moving_avg_label):
+    """Handles GUI actions for logging weight."""
     try:
-        purge_records(DATABASE_FILE, years=10)
         date_str = date_entry.get()
         weight = float(weight_entry.get())
-        validate_weight(weight)
-        date = validate_date(date_str)
+        logged_date = log_weight(date_str, weight)
 
-        insert_or_update_weigh_in(date, weight)
-        messagebox.showinfo("Success", f"Weigh-in for {date} logged successfully!")
+        messagebox.showinfo(
+            "Success", f"Weigh-in for {logged_date} logged successfully!"
+        )
+
         reset_entries(date_entry, weight_entry)
+        update_display(table_frame, moving_avg_label)
 
     except ValueError as e:
         messagebox.showerror("Invalid Input", f"Error: {e}")
@@ -135,7 +147,6 @@ def log_specific_date(date_entry, weight_entry, table_frame, moving_avg_label):
         messagebox.showerror(
             "Invalid Input", "Please enter the date in YYYY-MM-DD format."
         )
-    update_display(table_frame, moving_avg_label)
 
 
 def validate_weight(weight):
